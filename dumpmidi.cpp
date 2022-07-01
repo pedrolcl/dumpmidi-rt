@@ -18,10 +18,10 @@
 
 #include <iostream>
 #include <iomanip>
+#include <csignal>
 
 #include <QObject>
 #include <QCoreApplication>
-#include <QSocketNotifier>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 
@@ -31,20 +31,10 @@
 class DumpMIDI : public QObject
 {
     Q_OBJECT
-    QSocketNotifier *m_notifier;
 public:    
-    DumpMIDI(QObject *parent = nullptr): QObject(parent) {
-        m_notifier = new QSocketNotifier(fileno(stdin), QSocketNotifier::Read, this);
-        connect(m_notifier, &QSocketNotifier::activated, this, &DumpMIDI::readConsole);
-    }
+    DumpMIDI(QObject *parent = nullptr): QObject(parent) {}
+
 public slots:
-    void readConsole(QSocketDescriptor socket, QSocketNotifier::Type type) {
-        Q_UNUSED(socket)
-        Q_UNUSED(type)
-        std::string line;
-        std::getline(std::cin, line); 
-        qApp->quit();
-    }
     void noteOn(int chan, int note, int vel) {
         std::cout << std::setw(23) << std::left << "note on";
         std::cout << std::setw(2) << std::right << chan << " ";
@@ -100,6 +90,15 @@ public slots:
     }
 };
 
+void signalHandler(int sig)
+{
+    if (sig == SIGINT)
+        std::cerr << "Received a SIGINT. Exiting" << std::endl;
+    else if (sig == SIGTERM)
+        std::cerr << "Received a SIGTERM. Exiting" << std::endl;
+    qApp->quit();
+}
+
 int main(int argc, char **argv) {
     const QString PGM_NAME = QStringLiteral("dumpmidi-rt");
     const QString PGM_DESCRIPTION = QStringLiteral("Drumstick command line utility for decoding MIDI events");
@@ -118,6 +117,8 @@ int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(PGM_NAME);
     QCoreApplication::setApplicationVersion(QStringLiteral(QT_STRINGIFY(VERSION)));
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
     QCommandLineParser parser;
     parser.setApplicationDescription(PGM_DESCRIPTION);
     auto helpOption = parser.addHelpOption();
@@ -168,7 +169,7 @@ int main(int argc, char **argv) {
         input->open(conn);
         std::cout << "driver: " << input->backendName().toStdString() << std::endl;
         std::cout << "port: " << conn.first.toStdString() << std::endl;
-        std::cout << "Press <Enter> to stop the program..." << std::endl;
+        std::cout << "Press ^C to stop the program..." << std::endl;
         std::cout << "Event_________________ Ch _Data__" << std::endl;
         std::cout.flush();
     }
