@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
     if (input == nullptr) {
         std::cerr << "Error: input driver (" << driverName.toStdString() << ") not found." << std::endl;
         std::cerr << "You may need to set the environment variable DRUMSTICKRT" << std::endl;
-        return 0;
+        return EXIT_FAILURE;
     } else {
         QObject::connect(input, &drumstick::rt::MIDIInput::midiNoteOn, &dmp, &DumpMIDI::noteOn);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiNoteOff, &dmp, &DumpMIDI::noteOff);
@@ -163,6 +163,7 @@ int main(int argc, char **argv) {
             if (it != avail.end()) {
                 conn = *it;
             } else {
+                std::cerr << "Port " << portName.toStdString() << " not available." << std::endl;
                 conn = avail.first();
             }
         }
