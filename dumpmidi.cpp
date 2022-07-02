@@ -124,12 +124,14 @@ int main(int argc, char **argv) {
     auto helpOption = parser.addHelpOption();
     auto versionOption = parser.addVersionOption();
     QCommandLineOption driverOption({"d", "driver"}, "MIDI Driver.", "driver");
-    parser.addOption(driverOption);
     QCommandLineOption portOption({"p", "port"}, "MIDI Port.", "port");
+    QCommandLineOption listOption({"l", "list"}, "List available MIDI Ports.");
+    parser.addOption(driverOption);
     parser.addOption(portOption);
+    parser.addOption(listOption);
     parser.process(app);
     if (parser.isSet(versionOption) || parser.isSet(helpOption)) {
-        return 0;
+        return EXIT_SUCCESS;
     }    
     drumstick::rt::BackendManager man;
     QString driverName = DEFAULT_DRIVER;
@@ -154,6 +156,16 @@ int main(int argc, char **argv) {
         QObject::connect(input, &drumstick::rt::MIDIInput::midiSystemCommon, &dmp, &DumpMIDI::systemCommon);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiSystemRealtime, &dmp, &DumpMIDI::systemRealtime);
         drumstick::rt::MIDIConnection conn;
+        if (parser.isSet(listOption)) {
+            auto avail = input->connections(true);
+            std::cout << "Available MIDI Ports:" << std::endl;
+            foreach(auto p, avail) {
+                if (!p.first.isEmpty()) {
+                    std::cout << p.first.toStdString() << std::endl;
+                }
+            }
+            return EXIT_SUCCESS;
+        }
         if (parser.isSet(portOption)) {
             QString portName = parser.value(portOption);
             auto avail = input->connections(true);
