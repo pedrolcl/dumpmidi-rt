@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     parser.process(app);
     if (parser.isSet(versionOption) || parser.isSet(helpOption)) {
         return EXIT_SUCCESS;
-    }    
+    }
     drumstick::rt::BackendManager man;
     QString driverName = DEFAULT_DRIVER;
     if (parser.isSet(driverOption)) {
@@ -156,28 +156,32 @@ int main(int argc, char **argv) {
         QObject::connect(input, &drumstick::rt::MIDIInput::midiSystemCommon, &dmp, &DumpMIDI::systemCommon);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiSystemRealtime, &dmp, &DumpMIDI::systemRealtime);
         drumstick::rt::MIDIConnection conn;
+        auto availableConnections = input->connections(true);
+        std::remove_if(availableConnections.begin(),
+                       availableConnections.end(),
+                       [](drumstick::rt::MIDIConnection m) { return m.first.isEmpty(); });
         if (parser.isSet(listOption)) {
-            auto avail = input->connections(true);
             std::cout << "Available MIDI Ports:" << std::endl;
-            foreach(auto p, avail) {
-                if (!p.first.isEmpty()) {
-                    std::cout << p.first.toStdString() << std::endl;
-                }
+            foreach (auto p, availableConnections) {
+                std::cout << p.first.toStdString() << std::endl;
             }
             return EXIT_SUCCESS;
         }
         if (parser.isSet(portOption)) {
             QString portName = parser.value(portOption);
-            auto avail = input->connections(true);
-            auto it = std::find_if(avail.begin(), avail.end(), 
-                [portName](drumstick::rt::MIDIConnection m) { return m.first == portName; }
-            );
-            if (it != avail.end()) {
+            auto it = std::find_if(availableConnections.begin(),
+                                   availableConnections.end(),
+                                   [portName](drumstick::rt::MIDIConnection m) {
+                                       return m.first == portName;
+                                   });
+            if (it != availableConnections.end()) {
                 conn = *it;
             } else {
                 std::cerr << "Port " << portName.toStdString() << " not available." << std::endl;
-                conn = avail.first();
+                conn = availableConnections.first();
             }
+        } else {
+            conn = availableConnections.first();
         }
         input->open(conn);
         std::cout << "driver: " << input->backendName().toStdString() << std::endl;
