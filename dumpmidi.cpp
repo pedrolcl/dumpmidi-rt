@@ -16,14 +16,15 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <iomanip>
+#include <chrono>
 #include <csignal>
+#include <iomanip>
+#include <iostream>
 
-#include <QObject>
-#include <QCoreApplication>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QCoreApplication>
+#include <QObject>
 
 #include <drumstick/backendmanager.h>
 #include <drumstick/rtmidiinput.h>
@@ -31,50 +32,87 @@
 class DumpMIDI : public QObject
 {
     Q_OBJECT
-public:    
-    DumpMIDI(QObject *parent = nullptr): QObject(parent) {}
+    using midi_clock = std::chrono::steady_clock;
+
+public:
+    DumpMIDI(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        m_last = midi_clock::now();
+    }
+
+    void delta_out()
+    {
+        auto current = midi_clock::now();
+        auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(current - m_last).count();
+        std::cout << std::setw(10) << delta << " ";
+        m_last = current;
+    }
 
 public slots:
-    void noteOn(int chan, int note, int vel) {
+    void noteOn(int chan, int note, int vel)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "note on";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << note << " ";
         std::cout << std::setw(3) << vel << std::endl;
     }
-    void noteOff(int chan, int note, int vel) {
+
+    void noteOff(int chan, int note, int vel)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "note off";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << note << " ";
         std::cout << std::setw(3) << vel << std::endl;
     }
-    void keyPressure(const int chan, const int note, const int value) {
+
+    void keyPressure(const int chan, const int note, const int value)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "polyphonic aftertouch";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << note << " ";
         std::cout << std::setw(3) << value << std::endl;
     }
-    void controller(const int chan, const int control, const int value) {
+
+    void controller(const int chan, const int control, const int value)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "control change";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << control << " ";
         std::cout << std::setw(3) << value << std::endl;
     }
-    void program(const int chan, const int program) {
+
+    void program(const int chan, const int program)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "program change";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << program << std::endl;
     }
-    void channelPressure(const int chan, const int value) {
+
+    void channelPressure(const int chan, const int value)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "channel aftertouch";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(3) << value << std::endl;
     }
-    void pitchBend(const int chan, const int value) {
+
+    void pitchBend(const int chan, const int value)
+    {
+        delta_out();
         std::cout << std::setw(23) << std::left << "pitch bend";
         std::cout << std::setw(2) << std::right << chan << " ";
         std::cout << std::setw(5) << value << std::endl;
     }
-    void sysex(const QByteArray &data) {
+
+    void sysex(const QByteArray &data)
+    {
+        delta_out();
         std::cout << std::setw(26) << std::left << "system exclusive" << std::setw(0);
         for (int i = 0; i < data.size(); ++i) {
             unsigned int digits = data[i] & 0xff;
@@ -82,12 +120,21 @@ public slots:
         }
         std::cout << std::dec << std::endl;
     }
-    void systemCommon(const int status) {
+
+    void systemCommon(const int status)
+    {
+        delta_out();
         std::cout << "system common: " << std::hex << status << std::dec << std::endl;
     }
-    void systemRealtime(const int status) {
+
+    void systemRealtime(const int status)
+    {
+        delta_out();
         std::cout << "system realtime: " << std::hex << status << std::dec << std::endl;
     }
+
+private:
+    midi_clock::time_point m_last;
 };
 
 void signalHandler(int sig)
@@ -187,7 +234,7 @@ int main(int argc, char **argv) {
         std::cout << "driver: " << input->backendName().toStdString() << std::endl;
         std::cout << "port: " << conn.first.toStdString() << std::endl;
         std::cout << "Press ^C to stop the program..." << std::endl;
-        std::cout << "Event_________________ Ch _Data__" << std::endl;
+        std::cout << "Delta_Time Event_________________ Ch _Data__" << std::endl;
         std::cout.flush();
     }
     return app.exec();
