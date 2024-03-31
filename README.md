@@ -1,5 +1,7 @@
 # dumpmidi-rt
 
+[![Build on Linux](https://github.com/pedrolcl/dumpmidi-rt/actions/workflows/linux-build.yml/badge.svg)](https://github.com/pedrolcl/dumpmidi-rt/actions/workflows/linux-build.yml)
+
 Multiplatform Command Line MIDI Monitor program using Drumstick::RT
 
 This program is equivalent to the `drumstick-dumpmid` utility that is included 
