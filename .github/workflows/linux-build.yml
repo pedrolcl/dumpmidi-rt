@@ -23,12 +23,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: dawidd6/action-download-artifact@v3
       with:
         name: ${{env.DRUMSTICKNAME}}
         github_token: ${{secrets.GH_PAT}}
         repo: pedrolcl/drumstick
+        allow_forks: false
         workflow: cmake.yml
 
     - name: Extract downloaded files
