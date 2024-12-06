@@ -1,6 +1,6 @@
 /*
     Multiplatform Command Line MIDI Monitor program using Drumstick::RT
-    Copyright (C) 2022, Pedro Lopez-Cabanillas <plcl@users.sf.net>
+    Copyright (C) 2022-2024, Pedro Lopez-Cabanillas <plcl@users.sf.net>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -181,6 +181,7 @@ int main(int argc, char **argv) {
         return EXIT_SUCCESS;
     }
     drumstick::rt::BackendManager man;
+
     QString driverName = DEFAULT_DRIVER;
     if (parser.isSet(driverOption)) {
         driverName = parser.value(driverOption);
@@ -192,6 +193,7 @@ int main(int argc, char **argv) {
         std::cerr << "You may need to set the environment variable DRUMSTICKRT" << std::endl;
         return EXIT_FAILURE;
     } else {
+        input->setPublicName(PGM_NAME);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiNoteOn, &dmp, &DumpMIDI::noteOn);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiNoteOff, &dmp, &DumpMIDI::noteOff);
         QObject::connect(input, &drumstick::rt::MIDIInput::midiKeyPressure, &dmp, &DumpMIDI::keyPressure);

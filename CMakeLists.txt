@@ -1,5 +1,5 @@
 # Multiplatform Command Line MIDI Monitor program using Drumstick::RT
-# Copyright (C) 2022, Pedro Lopez-Cabanillas <plcl@users.sf.net>
+# Copyright (C) 2022-2024, Pedro Lopez-Cabanillas <plcl@users.sf.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.14)
-project(dumpmidi-rt VERSION 1.0 LANGUAGES CXX)
+
+project(dumpmidi-rt
+    VERSION 1.1
+    LANGUAGES CXX
+)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
@@ -24,9 +28,17 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt5 Qt6)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core REQUIRED)
-find_package(Drumstick COMPONENTS RT REQUIRED)
+option(USE_QT5 "Prefer building with Qt5 instead of Qt6" OFF)
+
+if (USE_QT5)
+    find_package(QT NAMES Qt5 REQUIRED)
+    find_package(Qt5 5.15 COMPONENTS Core REQUIRED)
+else()
+    find_package(QT NAMES Qt6 REQUIRED)
+    find_package(Qt6 6.2 COMPONENTS Core REQUIRED)
+endif()
+
+find_package(Drumstick 2.10 COMPONENTS RT REQUIRED)
 
 add_executable(dumpmidi-rt
   dumpmidi.cpp
