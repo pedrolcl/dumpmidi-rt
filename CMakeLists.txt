@@ -41,7 +41,7 @@ endif()
 find_package(Drumstick 2.10 COMPONENTS RT REQUIRED)
 
 add_executable(dumpmidi-rt
-  dumpmidi.cpp
+    dumpmidi.cpp
 )
 
 target_compile_definitions( dumpmidi-rt

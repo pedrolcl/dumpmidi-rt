@@ -206,9 +206,12 @@ int main(int argc, char **argv) {
         QObject::connect(input, &drumstick::rt::MIDIInput::midiSystemRealtime, &dmp, &DumpMIDI::systemRealtime);
         drumstick::rt::MIDIConnection conn;
         auto availableConnections = input->connections(true);
-        std::remove_if(availableConnections.begin(),
-                       availableConnections.end(),
-                       [](drumstick::rt::MIDIConnection m) { return m.first.isEmpty(); });
+        auto result = std::remove_if(availableConnections.begin(),
+                           availableConnections.end(),
+                           [](drumstick::rt::MIDIConnection m) { return m.first.isEmpty(); });
+        if (result != availableConnections.end()) {
+            availableConnections.erase(result);
+        }
         if (parser.isSet(listOption)) {
             std::cout << "Available MIDI Ports:" << std::endl;
             foreach (auto p, availableConnections) {
